@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI Summarizer — Premium Dark UI</title>
+
+<style>
+  :root {
+    --bg:#0f172a;
+    --card:#0b1220;
+    --muted:#93a4c6;
+    --accent1:#7c4dff;
+    --accent2:#4f46e5;
+    --accent3:#06b6d4;
+    --radius:14px;
+    --glass:rgba(255,255,255,0.05);
+  }
+
+  * { box-sizing:border-box; }
+
+  body {
+    background:linear-gradient(180deg,#0f172a,#071120);
+    margin:0;
+    font-family: Inter, sans-serif;
+    color:#eaf2ff;
+    padding:20px;
+  }
+
+  .wrap {
+    max-width:960px;
+    margin:auto;
+  }
+
+  header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+  }
+
+  .brand {
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+
+  .logo {
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    font-weight:bold;
+    font-size:18px;
+  }
+
+  .card {
+    background:var(--glass);
+    border:1px solid rgba(255,255,255,0.07);
+    padding:20px;
+    border-radius:var(--radius);
+    box-shadow:0 10px 25px rgba(0,0,0,0.25);
+  }
+
+  .grid {
+    display:grid;
+    grid-template-columns:1fr 350px;
+    gap:20px;
+  }
+
+  @media(max-width:800px){
+    .grid { grid-template-columns:1fr; }
+  }
+
+  textarea {
+    width:100%;
+    min-height:200px;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.05);
+    background:#111a2f;
+    color:white;
+    resize:vertical;
+    font-size:14px;
+  }
+
+  .drop {
+    border:2px dashed rgba(255,255,255,0.08);
+    padding:20px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.02);
+    display:flex;
+    align-items:center;
+    gap:15px;
+    cursor:pointer;
+    transition:0.2s;
+  }
+
+  .drop.dragover {
+    border-color:var(--accent2);
+    background:rgba(79,70,229,0.15);
+  }
+
+  button {
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    background:linear-gradient(90deg,var(--accent2),var(--accent1));
+    color:white;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  .btn-secondary {
+    background:#1e293b;
+    margin-top:8px;
+  }
+
+  .summary-box {
+    min-height:200px;
+    background:#0e1628;
+    border:1px solid rgba(255,255,255,0.05);
+    padding:16px;
+    border-radius:12px;
+    white-space:pre-wrap;
+    display:none;
+  }
+
+  .spinner {
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    border:4px solid rgba(255,255,255,0.1);
+    border-top-color:var(--accent2);
+    animation:spin 0.9s linear infinite;
+    display:none;
+    margin:auto;
+    margin-top:15px;
+  }
+
+  @keyframes spin {
+    100% { transform:rotate(360deg); }
+  }
+
+  .toast {
+    position:fixed;
+    bottom:25px;
+    right:25px;
+    background:#0b1220;
+    padding:12px 18px;
+    border-radius:8px;
+    opacity:0;
+    transform:translateY(15px);
+    transition:0.25s;
+  }
+
+  .toast.show {
+    opacity:1;
+    transform:translateY(0);
+  }
+
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">AI</div>
+      <div>
+        <h2 style="margin:0;">AI Summarizer</h2>
+        <div style="color:var(--muted);font-size:13px;margin-top:3px;">Fast • Clean • Firebase-Style UX</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="grid">
+
+      <!-- LEFT SIDE -->
+      <div>
+        <textarea id="textInput" placeholder="Paste text here or upload a PDF..."></textarea>
+
+        <div class="drop" id="dropArea">
+          <svg width="28" height="28" fill="#9fc3ff"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M4 17v2h16v-2"/></svg>
+          <div>
+            <div style="font-size:14px;color:var(--muted);">Drop PDF here or click to upload</div>
+            <div id="fileMeta" style="font-size:12px;margin-top:2px;color:#dbeafe;">No file selected</div>
+          </div>
+          <input type="file" id="fileInput" accept="application/pdf" hidden>
+        </div>
+
+        <button id="summBtn">Summarize</button>
+        <button class="btn-secondary" id="clearBtn">Clear</button>
+      </div>
+
+      <!-- RIGHT SIDE -->
+      <div>
+
+        <div class="spinner" id="spinner"></div>
+
+        <div class="summary-box" id="summaryBox">
+          <h3 style="margin-top:0;">Summary</h3>
+          <div id="summaryText">No summary yet.</div>
+        </div>
+
+        <button class="btn-secondary" id="copyBtn" style="display:none;">Copy Summary</button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- CONFIG ---------------- */
+const API_URL = "https://hv6iooihcomtk6zlqj4wehs5me0agpar.lambda-url.us-east-1.on.aws/"; // <--- CHANGE THIS
+/* ---------------------------------------- */
+
+const fileInput = document.getElementById("fileInput");
+const dropArea = document.getElementById("dropArea");
+const textInput = document.getElementById("textInput");
+const summBtn = document.getElementById("summBtn");
+const clearBtn = document.getElementById("clearBtn");
+const spinner = document.getElementById("spinner");
+const summaryBox = document.getElementById("summaryBox");
+const summaryText = document.getElementById("summaryText");
+const copyBtn = document.getElementById("copyBtn");
+const fileMeta = document.getElementById("fileMeta");
+const toast = document.getElementById("toast");
+
+let selectedFile = null;
+
+/* --- Toast --- */
+function showToast(msg) {
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+/* --- Handle File Selection --- */
+dropArea.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (f.type !== "application/pdf") return showToast("Only PDF allowed");
+  setFile(f);
+});
+
+dropArea.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropArea.classList.add("dragover");
+});
+dropArea.addEventListener("dragleave", () => dropArea.classList.remove("dragover"));
+dropArea.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropArea.classList.remove("dragover");
+
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === "application/pdf") setFile(f);
+  else showToast("Only PDF allowed");
+});
+
+function setFile(f) {
+  selectedFile = f;
+  fileMeta.innerText = `${f.name} (${(f.size / 1024 / 1024).toFixed(1)} MB)`;
+}
+
+/* --- Clear --- */
+clearBtn.addEventListener("click", () => {
+  textInput.value = "";
+  summaryText.innerText = "No summary yet.";
+  summaryBox.style.display = "none";
+  selectedFile = null;
+  fileMeta.innerText = "No file selected";
+});
+
+/* --- Main Summarize Function --- */
+summBtn.addEventListener("click", async () => {
+  spinner.style.display = "block";
+  summaryBox.style.display = "none";
+
+  let payload = {};
+
+  // PDF
+  if (selectedFile) {
+    let base64 = await fileToBase64(selectedFile);
+    payload.pdf_b64 = base64;
+  } 
+  // text
+  else if (textInput.value.trim()) {
+    payload.text = textInput.value.trim();
+  } 
+  else {
+    showToast("Enter text or upload PDF");
+    spinner.style.display = "none";
+    return;
+  }
+
+  try {
+    let res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    let data = await res.json();
+
+    summaryText.innerText = data.summary || data.error;
+    summaryBox.style.display = "block";
+    copyBtn.style.display = "block";
+  } 
+  catch (e) {
+    summaryText.innerText = "Error: " + e.message;
+    summaryBox.style.display = "block";
+  }
+
+  spinner.style.display = "none";
+});
+
+/* --- Copy Summary --- */
+copyBtn.addEventListener("click", () => {
+  navigator.clipboard.writeText(summaryText.innerText);
+  showToast("Copied!");
+});
+
+/* --- Base64 helper --- */
+function fileToBase64(file) {
+  return new Promise((resolve) => {
+    let r = new FileReader();
+    r.onload = () => resolve(r.result.split(",")[1]);
+    r.readAsDataURL(file);
+  });
+}
+</script>
+
+</body>
+</html>
