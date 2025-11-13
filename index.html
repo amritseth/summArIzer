@@ -1,348 +1,736 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Summarizer — Premium Dark UI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS AI Document Summarizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-  :root {
-    --bg:#0f172a;
-    --card:#0b1220;
-    --muted:#93a4c6;
-    --accent1:#7c4dff;
-    --accent2:#4f46e5;
-    --accent3:#06b6d4;
-    --radius:14px;
-    --glass:rgba(255,255,255,0.05);
-  }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
 
-  * { box-sizing:border-box; }
+        .bg-animation {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  body {
-    background:linear-gradient(180deg,#0f172a,#071120);
-    margin:0;
-    font-family: Inter, sans-serif;
-    color:#eaf2ff;
-    padding:20px;
-  }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
 
-  .wrap {
-    max-width:960px;
-    margin:auto;
-  }
+        .blob1 {
+            width: 400px;
+            height: 400px;
+            background: #a855f7;
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
 
-  header {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:25px;
-  }
+        .blob2 {
+            width: 400px;
+            height: 400px;
+            background: #3b82f6;
+            bottom: -200px;
+            right: -200px;
+            animation-delay: 5s;
+        }
 
-  .brand {
-    display:flex;
-    gap:14px;
-    align-items:center;
-  }
+        .blob3 {
+            width: 300px;
+            height: 300px;
+            background: #ec4899;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 10s;
+        }
 
-  .logo {
-    width:48px;
-    height:48px;
-    border-radius:12px;
-    background:linear-gradient(135deg,var(--accent1),var(--accent2));
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:white;
-    font-weight:bold;
-    font-size:18px;
-  }
+        @keyframes float {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1); 
+            }
+            33% { 
+                transform: translate(50px, -50px) scale(1.1); 
+            }
+            66% { 
+                transform: translate(-50px, 50px) scale(0.9); 
+            }
+        }
 
-  .card {
-    background:var(--glass);
-    border:1px solid rgba(255,255,255,0.07);
-    padding:20px;
-    border-radius:var(--radius);
-    box-shadow:0 10px 25px rgba(0,0,0,0.25);
-  }
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+            }
+            50% { 
+                opacity: 0.5; 
+            }
+        }
 
-  .grid {
-    display:grid;
-    grid-template-columns:1fr 350px;
-    gap:20px;
-  }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  @media(max-width:800px){
-    .grid { grid-template-columns:1fr; }
-  }
+        @keyframes spin {
+            from { 
+                transform: rotate(0deg); 
+            }
+            to { 
+                transform: rotate(360deg); 
+            }
+        }
 
-  textarea {
-    width:100%;
-    min-height:200px;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.05);
-    background:#111a2f;
-    color:white;
-    resize:vertical;
-    font-size:14px;
-  }
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
 
-  .drop {
-    border:2px dashed rgba(255,255,255,0.08);
-    padding:20px;
-    border-radius:12px;
-    background:rgba(255,255,255,0.02);
-    display:flex;
-    align-items:center;
-    gap:15px;
-    cursor:pointer;
-    transition:0.2s;
-  }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease-out;
+        }
 
-  .drop.dragover {
-    border-color:var(--accent2);
-    background:rgba(79,70,229,0.15);
-  }
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
-  button {
-    width:100%;
-    padding:14px;
-    margin-top:15px;
-    background:linear-gradient(90deg,var(--accent2),var(--accent1));
-    color:white;
-    border:none;
-    border-radius:10px;
-    font-weight:bold;
-    font-size:14px;
-    cursor:pointer;
-  }
+        .sparkle-icon {
+            width: 50px;
+            height: 50px;
+            animation: pulse 2s infinite;
+        }
 
-  .btn-secondary {
-    background:#1e293b;
-    margin-top:8px;
-  }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-  .summary-box {
-    min-height:200px;
-    background:#0e1628;
-    border:1px solid rgba(255,255,255,0.05);
-    padding:16px;
-    border-radius:12px;
-    white-space:pre-wrap;
-    display:none;
-  }
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.25rem;
+            margin-bottom: 30px;
+        }
 
-  .spinner {
-    width:35px;
-    height:35px;
-    border-radius:50%;
-    border:4px solid rgba(255,255,255,0.1);
-    border-top-color:var(--accent2);
-    animation:spin 0.9s linear infinite;
-    display:none;
-    margin:auto;
-    margin-top:15px;
-  }
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
 
-  @keyframes spin {
-    100% { transform:rotate(360deg); }
-  }
+        .tech-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            transition: all 0.3s;
+        }
 
-  .toast {
-    position:fixed;
-    bottom:25px;
-    right:25px;
-    background:#0b1220;
-    padding:12px 18px;
-    border-radius:8px;
-    opacity:0;
-    transform:translateY(15px);
-    transition:0.25s;
-  }
+        .tech-badge:hover {
+            border-color: rgba(168, 85, 247, 0.6);
+            transform: translateY(-2px);
+        }
 
-  .toast.show {
-    opacity:1;
-    transform:translateY(0);
-  }
+        .tech-badge svg {
+            width: 24px;
+            height: 24px;
+        }
 
-</style>
+        .tech-badge span {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .main-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.5);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border: none;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab:hover {
+            background: rgba(51, 65, 85, 0.5);
+        }
+
+        .tab.active {
+            background: #9333ea;
+            color: white;
+        }
+
+        .tab svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        label {
+            display: block;
+            color: #e2e8f0;
+            font-weight: 500;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #475569;
+            border-radius: 15px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+
+        textarea::placeholder {
+            color: #64748b;
+        }
+
+        .upload-zone {
+            position: relative;
+            border: 2px dashed #475569;
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: #64748b;
+        }
+
+        .upload-zone.drag-over {
+            border-color: #9333ea;
+            background: rgba(147, 51, 234, 0.1);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            color: #a855f7;
+        }
+
+        .upload-text {
+            color: #cbd5e1;
+            font-size: 1.125rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            color: #10b981;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            color: #ef4444;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error.show {
+            display: flex;
+        }
+
+        .error svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .btn-summarize {
+            width: 100%;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.5);
+        }
+
+        .btn-summarize:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(147, 51, 234, 0.6);
+        }
+
+        .btn-summarize:active {
+            transform: translateY(0);
+        }
+
+        .btn-summarize:disabled {
+            background: linear-gradient(135deg, #475569, #475569);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-summarize svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        .summary-output {
+            display: none;
+            margin-top: 40px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .summary-output.show {
+            display: block;
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary-header svg {
+            width: 28px;
+            height: 28px;
+            color: #10b981;
+        }
+
+        .summary-header h3 {
+            color: #e2e8f0;
+            font-size: 1.5rem;
+        }
+
+        .summary-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #475569;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .summary-box p {
+            color: #e2e8f0;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tech-stack {
+                gap: 15px;
+            }
+
+            .tech-badge {
+                padding: 10px 20px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<div class="wrap">
-
-  <header>
-    <div class="brand">
-      <div class="logo">AI</div>
-      <div>
-        <h2 style="margin:0;">AI Summarizer</h2>
-        <div style="color:var(--muted);font-size:13px;margin-top:3px;">Fast • Clean • Firebase-Style UX</div>
-      </div>
+    <div class="bg-animation">
+        <div class="blob blob1"></div>
+        <div class="blob blob2"></div>
+        <div class="blob blob3"></div>
     </div>
-  </header>
 
-  <div class="card">
-    <div class="grid">
+    <div class="container">
+        <header class="header">
+            <div class="header-title">
+                <svg class="sparkle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #a855f7;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                </svg>
+                <h1>AI Document Summarizer</h1>
+            </div>
+            <p class="subtitle">Powered by cutting-edge AWS cloud technology</p>
+            
+            <div class="tech-stack">
+                <div class="tech-badge">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #fbbf24;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span>AWS Lambda</span>
+                </div>
+                <div class="tech-badge">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #3b82f6;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                    <span>AWS SageMaker</span>
+                </div>
+                <div class="tech-badge">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #ec4899;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                    <span>AWS Bedrock</span>
+                </div>
+            </div>
+        </header>
 
-      <!-- LEFT SIDE -->
-      <div>
-        <textarea id="textInput" placeholder="Paste text here or upload a PDF..."></textarea>
+        <div class="main-card">
+            <div class="tabs">
+                <button class="tab active" data-tab="text">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Text Input
+                </button>
+                <button class="tab" data-tab="file">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    File Upload
+                </button>
+            </div>
 
-        <div class="drop" id="dropArea">
-          <svg width="28" height="28" fill="#9fc3ff"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M4 17v2h16v-2"/></svg>
-          <div>
-            <div style="font-size:14px;color:var(--muted);">Drop PDF here or click to upload</div>
-            <div id="fileMeta" style="font-size:12px;margin-top:2px;color:#dbeafe;">No file selected</div>
-          </div>
-          <input type="file" id="fileInput" accept="application/pdf" hidden>
+            <div class="content">
+                <div class="tab-content active" id="text-content">
+                    <label>Enter your text to summarize</label>
+                    <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+                </div>
+
+                <div class="tab-content" id="file-content">
+                    <label>Upload a PDF or TXT file</label>
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="file-input" accept=".pdf,.txt">
+                        <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="upload-text">Drag and drop your file here</p>
+                        <p class="upload-subtext">or click to browse</p>
+                        <p class="upload-subtext" style="margin-top: 10px;">Supports PDF and TXT files</p>
+                    </div>
+                    <div class="file-info" id="file-info"></div>
+                </div>
+
+                <div class="error" id="error">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span id="error-text"></span>
+                </div>
+
+                <button class="btn-summarize" id="summarize-btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    Generate Summary
+                </button>
+
+                <div class="summary-output" id="summary-output">
+                    <div class="summary-header">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3>Summary</h3>
+                    </div>
+                    <div class="summary-box">
+                        <p id="summary-text"></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <button id="summBtn">Summarize</button>
-        <button class="btn-secondary" id="clearBtn">Clear</button>
-      </div>
-
-      <!-- RIGHT SIDE -->
-      <div>
-
-        <div class="spinner" id="spinner"></div>
-
-        <div class="summary-box" id="summaryBox">
-          <h3 style="margin-top:0;">Summary</h3>
-          <div id="summaryText">No summary yet.</div>
+        <div class="footer">
+            <p>Serverless AI processing &bull; Scalable infrastructure &bull; Enterprise-grade security</p>
         </div>
-
-        <button class="btn-secondary" id="copyBtn" style="display:none;">Copy Summary</button>
-
-      </div>
-
     </div>
-  </div>
-</div>
 
-<div class="toast" id="toast"></div>
+    <script>
+    var API_ENDPOINT = 'https://hv6iooihcomtk6zlqj4wehs5me0agpar.lambda-url.us-east-1.on.aws/';
+    
+    var selectedFile = null;
+    var activeTab = 'text';
 
-<script>
-/* ---------------- CONFIG ---------------- */
-const API_URL = "https://hv6iooihcomtk6zlqj4wehs5me0agpar.lambda-url.us-east-1.on.aws/"; // <--- CHANGE THIS
-/* ---------------------------------------- */
-
-const fileInput = document.getElementById("fileInput");
-const dropArea = document.getElementById("dropArea");
-const textInput = document.getElementById("textInput");
-const summBtn = document.getElementById("summBtn");
-const clearBtn = document.getElementById("clearBtn");
-const spinner = document.getElementById("spinner");
-const summaryBox = document.getElementById("summaryBox");
-const summaryText = document.getElementById("summaryText");
-const copyBtn = document.getElementById("copyBtn");
-const fileMeta = document.getElementById("fileMeta");
-const toast = document.getElementById("toast");
-
-let selectedFile = null;
-
-/* --- Toast --- */
-function showToast(msg) {
-  toast.innerText = msg;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2500);
-}
-
-/* --- Handle File Selection --- */
-dropArea.addEventListener("click", () => fileInput.click());
-
-fileInput.addEventListener("change", (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  if (f.type !== "application/pdf") return showToast("Only PDF allowed");
-  setFile(f);
-});
-
-dropArea.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  dropArea.classList.add("dragover");
-});
-dropArea.addEventListener("dragleave", () => dropArea.classList.remove("dragover"));
-dropArea.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropArea.classList.remove("dragover");
-
-  const f = e.dataTransfer.files[0];
-  if (f && f.type === "application/pdf") setFile(f);
-  else showToast("Only PDF allowed");
-});
-
-function setFile(f) {
-  selectedFile = f;
-  fileMeta.innerText = `${f.name} (${(f.size / 1024 / 1024).toFixed(1)} MB)`;
-}
-
-/* --- Clear --- */
-clearBtn.addEventListener("click", () => {
-  textInput.value = "";
-  summaryText.innerText = "No summary yet.";
-  summaryBox.style.display = "none";
-  selectedFile = null;
-  fileMeta.innerText = "No file selected";
-});
-
-/* --- Main Summarize Function --- */
-summBtn.addEventListener("click", async () => {
-  spinner.style.display = "block";
-  summaryBox.style.display = "none";
-
-  let payload = {};
-
-  // PDF
-  if (selectedFile) {
-    let base64 = await fileToBase64(selectedFile);
-    payload.pdf_b64 = base64;
-  } 
-  // text
-  else if (textInput.value.trim()) {
-    payload.text = textInput.value.trim();
-  } 
-  else {
-    showToast("Enter text or upload PDF");
-    spinner.style.display = "none";
-    return;
-  }
-
-  try {
-    let res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var tabName = tab.dataset.tab;
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName + '-content').classList.add('active');
+            
+            activeTab = tabName;
+            hideError();
+            hideSummary();
+        });
     });
 
-    let data = await res.json();
+    var fileInput = document.getElementById('file-input');
+    var uploadZone = document.getElementById('upload-zone');
+    var fileInfo = document.getElementById('file-info');
 
-    summaryText.innerText = data.summary || data.error;
-    summaryBox.style.display = "block";
-    copyBtn.style.display = "block";
-  } 
-  catch (e) {
-    summaryText.innerText = "Error: " + e.message;
-    summaryBox.style.display = "block";
-  }
+    uploadZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+    });
 
-  spinner.style.display = "none";
-});
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('drag-over');
+    });
 
-/* --- Copy Summary --- */
-copyBtn.addEventListener("click", () => {
-  navigator.clipboard.writeText(summaryText.innerText);
-  showToast("Copied!");
-});
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
 
-/* --- Base64 helper --- */
-function fileToBase64(file) {
-  return new Promise((resolve) => {
-    let r = new FileReader();
-    r.onload = () => resolve(r.result.split(",")[1]);
-    r.readAsDataURL(file);
-  });
-}
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (file.type === 'application/pdf' || file.type === 'text/plain') {
+            selectedFile = file;
+            fileInfo.innerHTML = '&#10003; Selected: ' + file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)';
+            fileInfo.classList.add('show');
+            hideError();
+        } else {
+            showError('Please upload a PDF or TXT file');
+            selectedFile = null;
+            fileInfo.classList.remove('show');
+        }
+    }
+
+    document.getElementById('summarize-btn').addEventListener('click', async function () {
+        hideError();
+        hideSummary();
+
+        var btn = document.getElementById('summarize-btn');
+        btn.disabled = true;
+        btn.innerHTML = loaderHTML();
+
+        try {
+            let payload = {};
+
+            if (activeTab === 'text') {
+                const text = document.getElementById('text-input').value.trim();
+                if (!text) return showError("Please enter text to summarize");
+                payload = { text: text };
+
+            } else {
+                if (!selectedFile) return showError("Please upload a file");
+
+                // Convert file to base64
+                const base64 = await fileToBase64(selectedFile);
+                if (selectedFile.type === "application/pdf") {
+                    payload = { pdf_b64: base64 };
+                } else {
+                    payload = { text: atob(base64.split(",")[1]) }; // plain text
+                }
+            }
+
+            const response = await fetch(API_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            showSummary(result.summary || result.result || "Summary generated");
+
+        } catch (error) {
+            console.error(error);
+            showError(error.message || "An error occurred. Try again.");
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = buttonHTML();
+    });
+
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function showError(message) {
+        var errorEl = document.getElementById('error');
+        document.getElementById('error-text').textContent = message;
+        errorEl.classList.add('show');
+    }
+
+    function hideError() {
+        document.getElementById('error').classList.remove('show');
+    }
+
+    function showSummary(text) {
+        document.getElementById('summary-text').textContent = text;
+        document.getElementById('summary-output').classList.add('show');
+    }
+
+    function hideSummary() {
+        document.getElementById('summary-output').classList.remove('show');
+    }
+
+    function loaderHTML() {
+        return `
+            <svg class="spinner" style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="4" opacity="0.25"></circle>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.3 0 0 5.3 0 12h4z" opacity="0.75"></path>
+            </svg> Processing with AWS AI...
+        `;
+    }
+
+    function buttonHTML() {
+        return `
+            <svg style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.2 6.8L21 12l-6 2L13 21l-2.2-6.8L5 12l6-2L13 3z"></path>
+            </svg>
+            Generate Summary
+        `;
+    }
 </script>
 
 </body>
